@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 
 import AppHeader from '../app-header';
 import TodoList from '../todo-list';
@@ -8,10 +8,9 @@ import ItemAddForm from '../item-add-form';
 
 import './app.css';
 
-export default class App extends Component {
-  maxId = 100;
-
-  state = {
+const App = () => {
+  const [state, setState] = useState({
+    maxId: 100,
     items: [
       { id: 1, label: 'Drink Coffee', important: false, done: false },
       { id: 2, label: 'Learn React', important: true, done: false },
@@ -24,16 +23,19 @@ export default class App extends Component {
     ],
     filter: 'all',
     search: '',
-  };
+  });
 
-  onItemAdded = (label) => {
-    this.setState((state) => {
-      const item = this.createItem(label);
-      return { items: [...state.items, item] };
+  const onItemAdded = (label) => {
+    setState((state) => {
+      const item = createItem(label);
+      return {
+        ...state,
+        items: [...state.items, item],
+      };
     });
   };
 
-  toggleProperty = (arr, id, propName) => {
+  const toggleProperty = (arr, id, propName) => {
     const idx = arr.findIndex((item) => item.id === id);
     const oldItem = arr[idx];
     const value = !oldItem[propName];
@@ -42,49 +44,62 @@ export default class App extends Component {
     return [...arr.slice(0, idx), item, ...arr.slice(idx + 1)];
   };
 
-  onToggleDone = (id) => {
-    this.setState((state) => {
-      const items = this.toggleProperty(state.items, id, 'done');
-      return { items };
+  const onToggleDone = (id) => {
+    setState((state) => {
+      const items = toggleProperty(state.items, id, 'done');
+      return {
+        ...state,
+        items,
+      };
     });
   };
 
-  onToggleImportant = (id) => {
-    this.setState((state) => {
-      const items = this.toggleProperty(state.items, id, 'important');
-      return { items };
+  const onToggleImportant = (id) => {
+    setState((state) => {
+      const items = toggleProperty(state.items, id, 'important');
+      return { ...state, items };
     });
   };
 
-  onDelete = (id) => {
-    this.setState((state) => {
+  const onDelete = (id) => {
+    setState((state) => {
       const idx = state.items.findIndex((item) => item.id === id);
       const items = [
         ...state.items.slice(0, idx),
         ...state.items.slice(idx + 1),
       ];
-      return { items };
+      return { ...state, items };
     });
   };
 
-  onFilterChange = (filter) => {
-    this.setState({ filter });
+  const onFilterChange = (filter) => {
+    setState((state) => {
+      return {
+        ...state,
+        filter,
+      };
+    });
   };
 
-  onSearchChange = (search) => {
-    this.setState({ search });
+  const onSearchChange = (search) => {
+    setState((state) => {
+      return {
+        ...state,
+        search,
+      };
+    });
   };
 
-  createItem(label) {
+  const createItem = (label) => {
     return {
-      id: ++this.maxId,
+      id: App.maxId++,
       label,
       important: false,
       done: false,
     };
-  }
+  };
 
-  filterItems(items, filter) {
+  const filterItems = (items, filter) => {
     if (filter === 'all') {
       return items;
     } else if (filter === 'active') {
@@ -92,9 +107,9 @@ export default class App extends Component {
     } else if (filter === 'done') {
       return items.filter((item) => item.done);
     }
-  }
+  };
 
-  searchItems(items, search) {
+  const searchItems = (items, search) => {
     if (search.length === 0) {
       return items;
     }
@@ -104,39 +119,41 @@ export default class App extends Component {
         item.label.toLowerCase().indexOf(search.toLowerCase()) > -1
       );
     });
-  }
+  };
 
-  render() {
-    const { items, filter, search } = this.state;
-    const doneCount = items.filter((item) => item.done).length;
-    const toDoCount = items.length - doneCount;
-    const visibleItems = this.searchItems(
-      this.filterItems(items, filter),
-      search
-    );
+  const { items, filter, search } = state;
+  console.log(items);
+  const doneCount = items.filter((item) => item.done).length;
+  const toDoCount = items.length - doneCount;
+  const visibleItems = searchItems(
+    filterItems(items, filter),
+    search
+  );
 
-    return (
-      <div className="todo-app">
-        <AppHeader toDo={toDoCount} done={doneCount} />
+  return (
+    <div className="todo-app">
+      <AppHeader toDo={toDoCount} done={doneCount} />
 
-        <div className="search-panel d-flex">
-          <SearchPanel onSearchChange={this.onSearchChange} />
+      <div className="search-panel d-flex">
+        <SearchPanel onSearchChange={onSearchChange} />
 
-          <ItemStatusFilter
-            filter={filter}
-            onFilterChange={this.onFilterChange}
-          />
-        </div>
-
-        <TodoList
-          items={visibleItems}
-          onToggleImportant={this.onToggleImportant}
-          onToggleDone={this.onToggleDone}
-          onDelete={this.onDelete}
+        <ItemStatusFilter
+          filter={filter}
+          onFilterChange={onFilterChange}
         />
-
-        <ItemAddForm onItemAdded={this.onItemAdded} />
       </div>
-    );
-  }
-}
+
+      <TodoList
+        items={visibleItems}
+        onToggleImportant={onToggleImportant}
+        onToggleDone={onToggleDone}
+        onDelete={onDelete}
+      />
+
+      <ItemAddForm onItemAdded={onItemAdded} />
+    </div>
+  );
+};
+App.maxId = 100;
+
+export default App;
